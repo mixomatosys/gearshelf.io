@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "@gearshelf/shared/*": ["./packages/shared/src/*"],
+      "@gearshelf/api/*": ["./packages/api/src/*"],
+      "@gearshelf/web/*": ["./packages/web/src/*"],
+      "@gearshelf/desktop/*": ["./packages/desktop/src/*"]
+    }
+  },
+  "include": [
+    "packages/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**"
+  ],
+  "references": [
+    { "path": "./packages/api" },
+    { "path": "./packages/web" },
+    { "path": "./packages/desktop" },
+    { "path": "./packages/shared" }
+  ]
+}

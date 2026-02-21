@@ -1,0 +1,43 @@
+{
+  "name": "gearshelf",
+  "version": "1.0.0",
+  "description": "Unified ecosystem for audio plugin discovery, management, and community",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces",
+    "api:dev": "npm run dev -w packages/api",
+    "web:dev": "npm run dev -w packages/web",
+    "desktop:dev": "npm run dev -w packages/desktop",
+    "mobile:dev": "npm run dev -w packages/mobile"
+  },
+  "keywords": [
+    "audio",
+    "plugins",
+    "VST",
+    "VST3",
+    "AU",
+    "music",
+    "production",
+    "discovery",
+    "inventory"
+  ],
+  "author": "mixomatosys",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}

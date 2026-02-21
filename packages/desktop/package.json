@@ -1,0 +1,48 @@
+{
+  "name": "@gearshelf/desktop",
+  "version": "1.0.0",
+  "description": "GearShelf Desktop - Cross-platform plugin inventory manager (evolved from AudioShelf)",
+  "main": "dist/main.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "electron-forge start",
+    "build": "tsc && electron-builder",
+    "start": "electron dist/main.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rimraf dist build",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0",
+    "axios": "^1.5.0",
+    "fs-extra": "^11.1.0",
+    "chokidar": "^3.5.0",
+    "sqlite3": "^5.1.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.0.0",
+    "@electron-forge/maker-deb": "^7.0.0",
+    "@electron-forge/maker-dmg": "^7.0.0",
+    "@electron-forge/maker-rpm": "^7.0.0",
+    "@electron-forge/maker-squirrel": "^7.0.0",
+    "@electron-forge/maker-zip": "^7.0.0",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.0",
+    "@types/fs-extra": "^11.0.0",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0"
+  },
+  "keywords": [
+    "electron",
+    "desktop",
+    "plugins",
+    "vst",
+    "inventory",
+    "cross-platform"
+  ]
+}
