@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { setupDatabase } from './database/connection';
 import { errorHandler } from './middleware/errorHandler';
@@ -11,6 +12,7 @@ import categoryRoutes from './routes/categories';
 import vendorRoutes from './routes/vendors';
 import formatRoutes from './routes/formats';
 import healthRoutes from './routes/health';
+import authRoutes from './routes/auth';
 
 // Load environment variables
 dotenv.config();
@@ -37,8 +39,10 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // API routes
+app.use('/api/auth', authRoutes);
 app.use('/api/plugins', pluginRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -61,12 +65,16 @@ app.use(errorHandler);
 // Initialize database and start server
 async function startServer() {
   try {
-    await setupDatabase();
+    const dbPool = await setupDatabase();
+    
+    // Make database pool available to routes
+    app.set('db', dbPool);
     
     app.listen(PORT, () => {
       console.log(`🎧 GearShelf API Server running on port ${PORT}`);
       console.log(`📊 Health endpoint: http://localhost:${PORT}/health`);
       console.log(`🔌 Plugins API: http://localhost:${PORT}/api/plugins`);
+      console.log(`🔐 Authentication API: http://localhost:${PORT}/api/auth`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
