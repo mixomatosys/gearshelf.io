@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: './src/renderer/index.tsx',
+  entry: './src/renderer/index-debug.tsx',
   target: 'electron-renderer',
   module: {
     rules: [
@@ -34,6 +34,7 @@ module.exports = {
   output: {
     filename: 'renderer.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/',
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -53,5 +54,11 @@ module.exports = {
     historyApiFallback: true,
     compress: true,
     hot: true,
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    devMiddleware: {
+      writeToDisk: true,
+    },
   },
 };
