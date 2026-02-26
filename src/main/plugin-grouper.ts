@@ -22,13 +22,14 @@ export class PluginGrouper {
 
     for (const plugin of plugins) {
       const groupKey = this.createGroupKey(plugin);
+      const pluginType: PluginType = plugin.type;
       
       if (groups.has(groupKey)) {
         // Add to existing group
         const existing = groups.get(groupKey)!;
-        if (!existing.types.includes(plugin.type)) {
-          existing.types.push(plugin.type);
-          existing.paths[plugin.type] = plugin.path;
+        if (!existing.types.includes(pluginType)) {
+          existing.types.push(pluginType);
+          existing.paths[pluginType] = plugin.path;
           if (plugin.format) {
             existing.formats.push(plugin.format);
           }
@@ -38,8 +39,8 @@ export class PluginGrouper {
         const newGroup: GroupedPlugin = {
           name: plugin.name, // Use original name for display
           manufacturer: plugin.manufacturer,
-          types: [plugin.type],
-          paths: { [plugin.type]: plugin.path },
+          types: [pluginType],
+          paths: { [pluginType]: plugin.path },
           formats: plugin.format ? [plugin.format] : [],
         };
         groups.set(groupKey, newGroup);
