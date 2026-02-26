@@ -48,7 +48,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-plugin-bg text-plugin-text">
+    <div className="h-screen flex flex-col bg-plugin-bg text-plugin-text">
       {/* Header */}
       <header className="bg-plugin-card border-b border-plugin-border px-6 py-4">
         <div className="flex items-center justify-between">
@@ -117,7 +117,7 @@ const App: React.FC = () => {
         </aside>
 
         {/* Main Plugin Area */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-6 overflow-y-auto">
           {scanMessage && (
             <div className="mb-4 p-3 bg-plugin-card border border-plugin-border rounded-lg">
               <p className="text-sm">{scanMessage}</p>
@@ -154,14 +154,14 @@ const App: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div>
-              <div className="mb-4">
+            <div className="h-full flex flex-col">
+              <div className="mb-4 flex-shrink-0">
                 <h2 className="text-lg font-semibold">Your Plugin Collection</h2>
                 <p className="text-plugin-text-dim text-sm">{plugins.length} plugins found</p>
               </div>
               
-              {/* Plugin List */}
-              <div className="space-y-3">
+              {/* Plugin List - Scrollable */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 plugin-scroll scroll-container">
                 {plugins.map((plugin, index) => (
                   <div key={index} className="bg-plugin-card border border-plugin-border p-4 rounded-lg hover:bg-plugin-hover transition-colors">
                     <div className="flex items-start justify-between">
