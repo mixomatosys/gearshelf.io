@@ -21,9 +21,15 @@ const createMainWindow = (): void => {
     show: false,
   });
 
-  // Load the app
+  // Load the app - TESTING MODE
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:3000');
+    // Try to load React app from webpack dev server
+    try {
+      mainWindow.loadURL('http://localhost:3000');
+      console.log('Loading from webpack dev server...');
+    } catch (e) {
+      console.error('Failed to load from dev server:', e);
+    }
     // Open DevTools in development
     mainWindow.webContents.openDevTools();
   } else {
