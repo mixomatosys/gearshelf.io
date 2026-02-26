@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: './src/renderer/index-debug.tsx',
+  entry: './src/renderer/index.tsx',
   target: 'web',
   node: {
     __dirname: false,
