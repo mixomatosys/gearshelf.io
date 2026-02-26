@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { PluginScanner } from './plugin-scanner';
 import { PluginGrouper } from './plugin-grouper';
+import { PluginDatabase } from './database';
 
 // Electron app setup
 
@@ -70,6 +71,15 @@ app.on('window-all-closed', () => {
   }
 });
 
+// Clean up database connection before quit
+app.on('before-quit', async () => {
+  try {
+    await pluginDatabase.close();
+  } catch (error) {
+    console.error('Error closing database:', error);
+  }
+});
+
 // Security: Prevent new window creation
 app.on('web-contents-created', (_event, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
@@ -78,31 +88,49 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
-// Initialize plugin scanner and grouper
+// Initialize plugin scanner, grouper, and database
 const pluginScanner = new PluginScanner();
 const pluginGrouper = new PluginGrouper();
+const pluginDatabase = new PluginDatabase();
 
-// Store plugins in memory for now (will add database later)
-let cachedPlugins: any[] = [];
-let cachedGroupedPlugins: any[] = [];
-let cachedStatistics: any = {};
+// Initialize database
+let databaseReady = false;
+pluginDatabase.initialize().then(() => {
+  databaseReady = true;
+  console.log('🎸 Database initialized successfully');
+}).catch((error) => {
+  console.error('🎸 Database initialization failed:', error);
+});
 
 // IPC handlers for plugin scanning
 ipcMain.handle('scan-plugins', async () => {
   console.log('🎸 Received scan-plugins request');
   
+  if (!databaseReady) {
+    return {
+      success: false,
+      message: 'Database not ready, please try again',
+      totalPlugins: 0,
+    };
+  }
+  
   try {
     // Perform the plugin scan
     const scanResult = await pluginScanner.scanAllPlugins();
     
-    // Group plugins by name/manufacturer
-    const groupedPlugins = pluginGrouper.groupPlugins(scanResult.plugins);
-    const statistics = pluginGrouper.getStatistics(groupedPlugins);
+    // Save plugins to database
+    await pluginDatabase.savePlugins(scanResult.plugins, scanResult.scanTime);
     
-    // Cache the results
-    cachedPlugins = scanResult.plugins;
-    cachedGroupedPlugins = groupedPlugins;
-    cachedStatistics = statistics;
+    // Get grouped plugins from database
+    const dbPlugins = await pluginDatabase.getActivePlugins();
+    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+      name: p.name,
+      manufacturer: p.manufacturer,
+      type: p.type as any,
+      path: p.path,
+      format: p.format
+    })));
+    const statistics = pluginGrouper.getStatistics(groupedPlugins);
     
     console.log(`🎸 Scan completed: ${scanResult.totalScanned} files found, ${groupedPlugins.length} unique plugins`);
     
@@ -128,10 +156,79 @@ ipcMain.handle('scan-plugins', async () => {
 
 ipcMain.handle('get-plugins', async () => {
   console.log('🎸 Received get-plugins request');
-  return cachedGroupedPlugins;
+  
+  if (!databaseReady) {
+    return [];
+  }
+  
+  try {
+    // Load plugins from database and group them
+    const dbPlugins = await pluginDatabase.getActivePlugins();
+    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+      name: p.name,
+      manufacturer: p.manufacturer,
+      type: p.type as any,
+      path: p.path,
+      format: p.format
+    })));
+    
+    return groupedPlugins;
+  } catch (error) {
+    console.error('🎸 Failed to load plugins from database:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('get-plugin-statistics', async () => {
   console.log('🎸 Received get-plugin-statistics request');
-  return cachedStatistics;
+  
+  if (!databaseReady) {
+    return {};
+  }
+  
+  try {
+    return await pluginDatabase.getStatistics();
+  } catch (error) {
+    console.error('🎸 Failed to load statistics from database:', error);
+    return {};
+  }
+});
+
+ipcMain.handle('search-plugins', async (event, query: string) => {
+  console.log('🎸 Received search-plugins request:', query);
+  
+  if (!databaseReady) {
+    return [];
+  }
+  
+  try {
+    const dbPlugins = await pluginDatabase.searchPlugins(query);
+    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+      name: p.name,
+      manufacturer: p.manufacturer,
+      type: p.type as any,
+      path: p.path,
+      format: p.format
+    })));
+    
+    return groupedPlugins;
+  } catch (error) {
+    console.error('🎸 Failed to search plugins:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('get-scan-history', async () => {
+  console.log('🎸 Received get-scan-history request');
+  
+  if (!databaseReady) {
+    return [];
+  }
+  
+  try {
+    return await pluginDatabase.getScanHistory(10);
+  } catch (error) {
+    console.error('🎸 Failed to load scan history:', error);
+    return [];
+  }
 });

@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   scanPlugins: () => ipcRenderer.invoke('scan-plugins'),
   getPlugins: () => ipcRenderer.invoke('get-plugins'),
   getPluginStatistics: () => ipcRenderer.invoke('get-plugin-statistics'),
+  searchPlugins: (query: string) => ipcRenderer.invoke('search-plugins', query),
+  getScanHistory: () => ipcRenderer.invoke('get-scan-history'),
   
   // Database operations (to be implemented)
   exportPlugins: (format: string) => ipcRenderer.invoke('export-plugins', format),
@@ -23,6 +25,8 @@ declare global {
       scanPlugins: () => Promise<any>;
       getPlugins: () => Promise<any[]>;
       getPluginStatistics: () => Promise<any>;
+      searchPlugins: (query: string) => Promise<any[]>;
+      getScanHistory: () => Promise<any[]>;
       exportPlugins: (format: string) => Promise<any>;
       getSettings: () => Promise<any>;
       setSettings: (settings: any) => Promise<void>;

@@ -4,10 +4,15 @@ const App: React.FC = () => {
   const [plugins, setPlugins] = useState<any[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleScanPlugins = async () => {
     setIsScanning(true);
     setScanMessage('Scanning your plugin directories...');
+    
+    // Clear search when scanning
+    setSearchQuery('');
     
     try {
       const result = await window.electronAPI.scanPlugins();
@@ -15,7 +20,7 @@ const App: React.FC = () => {
       if (result.success) {
         setScanMessage(`✅ ${result.message}`);
         
-        // Get updated plugin list
+        // Get updated plugin list (cleared search will show all)
         const updatedPlugins = await window.electronAPI.getPlugins();
         setPlugins(updatedPlugins);
         
@@ -34,18 +39,51 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    // Load existing plugins on startup
+    // Load existing plugins from database on startup
     const loadPlugins = async () => {
+      setIsLoading(true);
       try {
         const existingPlugins = await window.electronAPI.getPlugins();
         setPlugins(existingPlugins);
+        
+        if (existingPlugins.length > 0) {
+          setScanMessage(`✅ Loaded ${existingPlugins.length} unique plugins from database`);
+        } else {
+          setScanMessage('No plugins found. Click "Scan Plugins" to discover your collection.');
+        }
       } catch (error) {
         console.error('Error loading plugins:', error);
+        setScanMessage('❌ Error loading plugins from database');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadPlugins();
   }, []);
+
+  // Search functionality
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      // Load all plugins when search is cleared
+      try {
+        const allPlugins = await window.electronAPI.getPlugins();
+        setPlugins(allPlugins);
+      } catch (error) {
+        console.error('Error loading all plugins:', error);
+      }
+    } else {
+      // Search plugins
+      try {
+        const searchResults = await window.electronAPI.searchPlugins(query);
+        setPlugins(searchResults);
+      } catch (error) {
+        console.error('Error searching plugins:', error);
+      }
+    }
+  };
 
   return (
     <div className="h-screen flex flex-col bg-plugin-bg text-plugin-text">
@@ -128,41 +166,75 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {plugins.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-plugin-accent border-t-transparent rounded-full mb-4"></div>
+              <p className="text-plugin-text-dim">Loading your plugin collection...</p>
+            </div>
+          ) : plugins.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-6xl mb-4">🎵</div>
-              <h2 className="text-xl font-semibold mb-2">Welcome to GearShelf!</h2>
-              <p className="text-plugin-text-dim mb-6 max-w-lg leading-relaxed">
-                Your universal plugin manager for macOS. I'll scan and group your plugins by name, showing all available formats:
-              </p>
-              <div className="text-left mb-6 space-y-2 text-sm text-plugin-text-dim max-w-lg">
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-400">🔵</span>
-                  <span><strong>VST3 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST3</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">🟢</span>
-                  <span><strong>Audio Units</strong> - ~/Library/Audio/Plug-Ins/Components</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">🟣</span>
-                  <span><strong>VST2 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST</span>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold mb-2">
+                {searchQuery ? 'No plugins found' : 'Welcome to GearShelf!'}
+              </h2>
+              {searchQuery ? (
+                <p className="text-plugin-text-dim mb-6">
+                  No plugins match "{searchQuery}". Try a different search term.
+                </p>
+              ) : (
+                <>
+                  <p className="text-plugin-text-dim mb-6 max-w-lg leading-relaxed">
+                    Your universal plugin manager for macOS. I'll scan and group your plugins by name, showing all available formats:
+                  </p>
+                  <div className="text-left mb-6 space-y-2 text-sm text-plugin-text-dim max-w-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-400">🔵</span>
+                      <span><strong>VST3 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST3</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">🟢</span>
+                      <span><strong>Audio Units</strong> - ~/Library/Audio/Plug-Ins/Components</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400">🟣</span>
+                      <span><strong>VST2 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST</span>
+                    </div>
+                  </div>
+                </>
+              )}
               <button
                 onClick={handleScanPlugins}
                 disabled={isScanning}
                 className="bg-plugin-accent hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
               >
-                🔍 Get Started - Scan Your Plugins
+                🔍 {searchQuery ? 'Clear Search & ' : 'Get Started - '}Scan Your Plugins
               </button>
             </div>
           ) : (
             <div className="h-full flex flex-col">
               <div className="mb-4 flex-shrink-0">
-                <h2 className="text-lg font-semibold">Your Plugin Collection</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold">Your Plugin Collection</h2>
+                  {plugins.length > 0 && (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search plugins..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="bg-plugin-card border border-plugin-border rounded-lg px-3 py-1 text-sm text-plugin-text placeholder-plugin-text-dim focus:outline-none focus:border-plugin-accent w-64"
+                      />
+                      <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-plugin-text-dim">
+                        🔍
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-plugin-text-dim text-sm">
-                  {plugins.length} unique plugins • {plugins.filter(p => p.types.length > 1).length} multi-format
+                  {searchQuery ? 
+                    `${plugins.length} plugins matching "${searchQuery}"` :
+                    `${plugins.length} unique plugins • ${plugins.filter(p => p.types.length > 1).length} multi-format`
+                  }
                 </p>
               </div>
               
