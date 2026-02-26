@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/renderer/index.tsx',
@@ -39,7 +40,14 @@ module.exports = {
       template: './src/renderer/index.html',
       filename: 'index.html',
     }),
+    new webpack.DefinePlugin({
+      'global': 'globalThis',
+    }),
   ],
+  externals: {
+    'sqlite3': 'commonjs sqlite3',
+    'electron': 'commonjs electron',
+  },
   devServer: {
     port: 3000,
     historyApiFallback: true,
