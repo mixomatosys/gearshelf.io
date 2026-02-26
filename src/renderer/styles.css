@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-plugin-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-plugin-border rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-plugin-text-dim;
+}
+
+/* Base styles */
+body {
+  @apply bg-plugin-bg text-plugin-text;
+}
+
+/* Plugin list styles */
+.plugin-row {
+  @apply border-b border-plugin-border hover:bg-plugin-hover transition-colors duration-150;
+}
+
+.plugin-card {
+  @apply bg-plugin-card border border-plugin-border rounded-lg p-4 hover:bg-plugin-hover transition-colors duration-150;
+}

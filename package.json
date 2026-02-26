@@ -1,0 +1,68 @@
+{
+  "name": "gearshelf",
+  "version": "0.1.0",
+  "description": "Universal plugin manager - scan, inventory, and manage ALL your VST/AU plugins in one app",
+  "main": "dist/main.js",
+  "homepage": "https://github.com/mixomatosys/gearshelf.io",
+  "author": {
+    "name": "Mixy",
+    "email": "mixy@gearshelf.io"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev:main": "webpack --config webpack.main.config.js --mode development --watch",
+    "dev:renderer": "webpack serve --config webpack.renderer.config.js --mode development",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "webpack --config webpack.main.config.js --mode production",
+    "build:renderer": "webpack --config webpack.renderer.config.js --mode production",
+    "start": "electron .",
+    "package": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "concurrently": "^8.2.0",
+    "css-loader": "^6.10.0",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.0",
+    "html-webpack-plugin": "^5.6.0",
+    "postcss": "^8.4.0",
+    "postcss-loader": "^8.1.0",
+    "style-loader": "^3.3.0",
+    "tailwindcss": "^3.4.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-dev-server": "^4.15.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sqlite3": "^5.1.0"
+  },
+  "build": {
+    "appId": "io.gearshelf.app",
+    "productName": "GearShelf",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
