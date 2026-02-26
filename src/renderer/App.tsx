@@ -84,20 +84,24 @@ const App: React.FC = () => {
               <h3 className="text-sm font-semibold text-plugin-text-dim mb-2">STATISTICS</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Total Plugins</span>
+                  <span>Unique Plugins</span>
                   <span className="font-mono">{plugins.length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>VST3</span>
-                  <span className="font-mono">{plugins.filter(p => p.type === 'VST3').length}</span>
+                  <span className="font-mono">{plugins.filter(p => p.types.includes('VST3')).length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Audio Units</span>
-                  <span className="font-mono">{plugins.filter(p => p.type === 'AU').length}</span>
+                  <span className="font-mono">{plugins.filter(p => p.types.includes('AU')).length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>VST2</span>
-                  <span className="font-mono">{plugins.filter(p => p.type === 'VST2').length}</span>
+                  <span className="font-mono">{plugins.filter(p => p.types.includes('VST2')).length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Multi-format</span>
+                  <span className="font-mono">{plugins.filter(p => p.types.length > 1).length}</span>
                 </div>
               </div>
             </div>
@@ -129,7 +133,7 @@ const App: React.FC = () => {
               <div className="text-6xl mb-4">🎵</div>
               <h2 className="text-xl font-semibold mb-2">Welcome to GearShelf!</h2>
               <p className="text-plugin-text-dim mb-6 max-w-lg leading-relaxed">
-                Your universal plugin manager for macOS. I'll scan your system for:
+                Your universal plugin manager for macOS. I'll scan and group your plugins by name, showing all available formats:
               </p>
               <div className="text-left mb-6 space-y-2 text-sm text-plugin-text-dim max-w-lg">
                 <div className="flex items-center gap-2">
@@ -157,7 +161,9 @@ const App: React.FC = () => {
             <div className="h-full flex flex-col">
               <div className="mb-4 flex-shrink-0">
                 <h2 className="text-lg font-semibold">Your Plugin Collection</h2>
-                <p className="text-plugin-text-dim text-sm">{plugins.length} plugins found</p>
+                <p className="text-plugin-text-dim text-sm">
+                  {plugins.length} unique plugins • {plugins.filter(p => p.types.length > 1).length} multi-format
+                </p>
               </div>
               
               {/* Plugin List - Scrollable */}
@@ -167,15 +173,17 @@ const App: React.FC = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex-shrink-0">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              plugin.type === 'VST3' ? 'bg-blue-900 text-blue-200' :
-                              plugin.type === 'AU' ? 'bg-green-900 text-green-200' :
-                              plugin.type === 'VST2' ? 'bg-purple-900 text-purple-200' :
-                              'bg-gray-900 text-gray-200'
-                            }`}>
-                              {plugin.type || 'Unknown'}
-                            </span>
+                          <div className="flex-shrink-0 flex gap-1">
+                            {plugin.types.map((type, typeIndex) => (
+                              <span key={typeIndex} className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                type === 'VST3' ? 'bg-blue-900 text-blue-200' :
+                                type === 'AU' ? 'bg-green-900 text-green-200' :
+                                type === 'VST2' ? 'bg-purple-900 text-purple-200' :
+                                'bg-gray-900 text-gray-200'
+                              }`}>
+                                {type}
+                              </span>
+                            ))}
                           </div>
                           <h3 className="font-semibold text-plugin-text">{plugin.name || 'Unknown Plugin'}</h3>
                         </div>
@@ -187,16 +195,34 @@ const App: React.FC = () => {
                               {plugin.manufacturer}
                             </span>
                           )}
-                          {plugin.format && (
+                          <span className="flex items-center gap-1">
+                            <span className="text-plugin-accent">🎵</span>
+                            {plugin.types.length === 1 ? 
+                              `${plugin.types[0]} Plugin` : 
+                              `${plugin.types.length} formats`
+                            }
+                          </span>
+                          {plugin.types.length > 1 && (
                             <span className="flex items-center gap-1">
-                              <span className="text-plugin-accent">🎵</span>
-                              {plugin.format}
+                              <span className="text-plugin-accent">⭐</span>
+                              Multi-format
                             </span>
                           )}
                         </div>
                         
-                        <div className="text-xs text-plugin-text-dim font-mono bg-plugin-bg px-2 py-1 rounded truncate">
-                          {plugin.path}
+                        <div className="text-xs text-plugin-text-dim space-y-1">
+                          {plugin.types.map((type, pathIndex) => (
+                            <div key={pathIndex} className="font-mono bg-plugin-bg px-2 py-1 rounded truncate flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${
+                                type === 'VST3' ? 'bg-blue-400' :
+                                type === 'AU' ? 'bg-green-400' :
+                                type === 'VST2' ? 'bg-purple-400' :
+                                'bg-gray-400'
+                              }`}></span>
+                              <span className="text-xs opacity-75">{type}:</span>
+                              <span className="flex-1 truncate">{plugin.paths[type]}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                       

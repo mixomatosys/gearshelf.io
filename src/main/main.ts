@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { PluginScanner } from './plugin-scanner';
+import { PluginGrouper } from './plugin-grouper';
 
 // Electron app setup
 
@@ -77,11 +78,14 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
-// Initialize plugin scanner
+// Initialize plugin scanner and grouper
 const pluginScanner = new PluginScanner();
+const pluginGrouper = new PluginGrouper();
 
 // Store plugins in memory for now (will add database later)
 let cachedPlugins: any[] = [];
+let cachedGroupedPlugins: any[] = [];
+let cachedStatistics: any = {};
 
 // IPC handlers for plugin scanning
 ipcMain.handle('scan-plugins', async () => {
@@ -91,17 +95,26 @@ ipcMain.handle('scan-plugins', async () => {
     // Perform the plugin scan
     const scanResult = await pluginScanner.scanAllPlugins();
     
+    // Group plugins by name/manufacturer
+    const groupedPlugins = pluginGrouper.groupPlugins(scanResult.plugins);
+    const statistics = pluginGrouper.getStatistics(groupedPlugins);
+    
     // Cache the results
     cachedPlugins = scanResult.plugins;
+    cachedGroupedPlugins = groupedPlugins;
+    cachedStatistics = statistics;
     
-    console.log(`🎸 Scan completed: ${scanResult.totalScanned} plugins found`);
+    console.log(`🎸 Scan completed: ${scanResult.totalScanned} files found, ${groupedPlugins.length} unique plugins`);
     
     return {
       success: true,
-      message: `Found ${scanResult.totalScanned} plugins in ${scanResult.scanTime}ms`,
-      totalPlugins: scanResult.totalScanned,
+      message: `Found ${statistics.uniquePlugins} unique plugins (${statistics.totalFiles} files) in ${scanResult.scanTime}ms`,
+      totalPlugins: statistics.uniquePlugins,
+      totalFiles: statistics.totalFiles,
+      multiFormatCount: statistics.multiFormatCount,
       scanTime: scanResult.scanTime,
       errors: scanResult.errors,
+      statistics: statistics,
     };
   } catch (error) {
     console.error('🎸 Plugin scan failed:', error);
@@ -115,5 +128,10 @@ ipcMain.handle('scan-plugins', async () => {
 
 ipcMain.handle('get-plugins', async () => {
   console.log('🎸 Received get-plugins request');
-  return cachedPlugins;
+  return cachedGroupedPlugins;
+});
+
+ipcMain.handle('get-plugin-statistics', async () => {
+  console.log('🎸 Received get-plugin-statistics request');
+  return cachedStatistics;
 });
