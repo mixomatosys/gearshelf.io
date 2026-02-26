@@ -1,25 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
+import { Plugin, ScanResult, PluginType } from './types';
 
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
-
-export interface Plugin {
-  name: string;
-  path: string;
-  type: 'VST3' | 'VST2' | 'AU' | 'Unknown';
-  manufacturer?: string;
-  version?: string;
-  format?: string;
-}
-
-export interface ScanResult {
-  plugins: Plugin[];
-  totalScanned: number;
-  errors: string[];
-  scanTime: number;
-}
 
 export class PluginScanner {
   private scanPaths: { [key: string]: string[] } = {

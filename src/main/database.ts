@@ -2,8 +2,7 @@ import * as sqlite3 from 'sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { app } from 'electron';
-import { Plugin } from './plugin-scanner';
-import { GroupedPlugin } from './plugin-grouper';
+import { Plugin, GroupedPlugin } from './types';
 
 export interface DatabasePlugin {
   id: number;

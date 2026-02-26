@@ -3,6 +3,7 @@ import path from 'path';
 import { PluginScanner } from './plugin-scanner';
 import { PluginGrouper } from './plugin-grouper';
 import { PluginDatabase } from './database';
+import { Plugin } from './types';
 
 // Electron app setup
 
@@ -123,13 +124,14 @@ ipcMain.handle('scan-plugins', async () => {
     
     // Get grouped plugins from database
     const dbPlugins = await pluginDatabase.getActivePlugins();
-    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+    const pluginData: Plugin[] = dbPlugins.map(p => ({
       name: p.name,
       manufacturer: p.manufacturer,
-      type: p.type as any,
+      type: p.type as Plugin['type'],
       path: p.path,
       format: p.format
-    })));
+    }));
+    const groupedPlugins = pluginGrouper.groupPlugins(pluginData);
     const statistics = pluginGrouper.getStatistics(groupedPlugins);
     
     console.log(`🎸 Scan completed: ${scanResult.totalScanned} files found, ${groupedPlugins.length} unique plugins`);
@@ -164,13 +166,14 @@ ipcMain.handle('get-plugins', async () => {
   try {
     // Load plugins from database and group them
     const dbPlugins = await pluginDatabase.getActivePlugins();
-    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+    const pluginData: Plugin[] = dbPlugins.map(p => ({
       name: p.name,
       manufacturer: p.manufacturer,
-      type: p.type as any,
+      type: p.type as Plugin['type'],
       path: p.path,
       format: p.format
-    })));
+    }));
+    const groupedPlugins = pluginGrouper.groupPlugins(pluginData);
     
     return groupedPlugins;
   } catch (error) {
@@ -203,13 +206,14 @@ ipcMain.handle('search-plugins', async (event, query: string) => {
   
   try {
     const dbPlugins = await pluginDatabase.searchPlugins(query);
-    const groupedPlugins = pluginGrouper.groupPlugins(dbPlugins.map(p => ({
+    const pluginData: Plugin[] = dbPlugins.map(p => ({
       name: p.name,
       manufacturer: p.manufacturer,
-      type: p.type as any,
+      type: p.type as Plugin['type'],
       path: p.path,
       format: p.format
-    })));
+    }));
+    const groupedPlugins = pluginGrouper.groupPlugins(pluginData);
     
     return groupedPlugins;
   } catch (error) {

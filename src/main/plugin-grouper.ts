@@ -1,14 +1,4 @@
-import { Plugin } from './plugin-scanner';
-
-type PluginType = 'VST3' | 'VST2' | 'AU' | 'Unknown';
-
-export interface GroupedPlugin {
-  name: string;
-  manufacturer?: string;
-  types: Array<PluginType>;
-  paths: { [key: string]: string }; // type -> path mapping
-  formats: string[];
-}
+import { Plugin, GroupedPlugin, PluginType } from './types';
 
 export class PluginGrouper {
   private normalizePluginName(name: string): string {
