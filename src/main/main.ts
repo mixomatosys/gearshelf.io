@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
+import { PluginScanner } from './plugin-scanner';
 
 // Electron app setup
 
@@ -76,13 +77,43 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
-// IPC handlers for plugin scanning (to be implemented)
+// Initialize plugin scanner
+const pluginScanner = new PluginScanner();
+
+// Store plugins in memory for now (will add database later)
+let cachedPlugins: any[] = [];
+
+// IPC handlers for plugin scanning
 ipcMain.handle('scan-plugins', async () => {
-  // Plugin scanning logic will go here
-  return { message: 'Plugin scanning not implemented yet' };
+  console.log('🎸 Received scan-plugins request');
+  
+  try {
+    // Perform the plugin scan
+    const scanResult = await pluginScanner.scanAllPlugins();
+    
+    // Cache the results
+    cachedPlugins = scanResult.plugins;
+    
+    console.log(`🎸 Scan completed: ${scanResult.totalScanned} plugins found`);
+    
+    return {
+      success: true,
+      message: `Found ${scanResult.totalScanned} plugins in ${scanResult.scanTime}ms`,
+      totalPlugins: scanResult.totalScanned,
+      scanTime: scanResult.scanTime,
+      errors: scanResult.errors,
+    };
+  } catch (error) {
+    console.error('🎸 Plugin scan failed:', error);
+    return {
+      success: false,
+      message: `Scan failed: ${error}`,
+      totalPlugins: 0,
+    };
+  }
 });
 
 ipcMain.handle('get-plugins', async () => {
-  // Database query logic will go here
-  return [];
+  console.log('🎸 Received get-plugins request');
+  return cachedPlugins;
 });

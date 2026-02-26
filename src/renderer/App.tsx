@@ -7,17 +7,27 @@ const App: React.FC = () => {
 
   const handleScanPlugins = async () => {
     setIsScanning(true);
-    setScanMessage('Scanning for plugins...');
+    setScanMessage('Scanning your plugin directories...');
     
     try {
       const result = await window.electronAPI.scanPlugins();
-      setScanMessage(result.message || 'Scan completed!');
       
-      // Get updated plugin list
-      const updatedPlugins = await window.electronAPI.getPlugins();
-      setPlugins(updatedPlugins);
+      if (result.success) {
+        setScanMessage(`✅ ${result.message}`);
+        
+        // Get updated plugin list
+        const updatedPlugins = await window.electronAPI.getPlugins();
+        setPlugins(updatedPlugins);
+        
+        if (result.errors && result.errors.length > 0) {
+          console.warn('Scan completed with warnings:', result.errors);
+        }
+      } else {
+        setScanMessage(`❌ ${result.message}`);
+      }
     } catch (error) {
-      setScanMessage('Error scanning plugins: ' + error);
+      setScanMessage('❌ Error scanning plugins: ' + error);
+      console.error('Scan error:', error);
     } finally {
       setIsScanning(false);
     }
@@ -79,15 +89,15 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>VST3</span>
-                  <span className="font-mono">0</span>
+                  <span className="font-mono">{plugins.filter(p => p.type === 'VST3').length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Audio Units</span>
-                  <span className="font-mono">0</span>
+                  <span className="font-mono">{plugins.filter(p => p.type === 'AU').length}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>VST2</span>
-                  <span className="font-mono">0</span>
+                  <span className="font-mono">{plugins.filter(p => p.type === 'VST2').length}</span>
                 </div>
               </div>
             </div>
@@ -118,9 +128,23 @@ const App: React.FC = () => {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="text-6xl mb-4">🎵</div>
               <h2 className="text-xl font-semibold mb-2">Welcome to GearShelf!</h2>
-              <p className="text-plugin-text-dim mb-6 max-w-md">
-                Your universal plugin manager. Click "Scan Plugins" to discover all the audio plugins installed on your system.
+              <p className="text-plugin-text-dim mb-6 max-w-lg leading-relaxed">
+                Your universal plugin manager for macOS. I'll scan your system for:
               </p>
+              <div className="text-left mb-6 space-y-2 text-sm text-plugin-text-dim max-w-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">🔵</span>
+                  <span><strong>VST3 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST3</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">🟢</span>
+                  <span><strong>Audio Units</strong> - ~/Library/Audio/Plug-Ins/Components</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-purple-400">🟣</span>
+                  <span><strong>VST2 Plugins</strong> - ~/Library/Audio/Plug-Ins/VST</span>
+                </div>
+              </div>
               <button
                 onClick={handleScanPlugins}
                 disabled={isScanning}
@@ -137,18 +161,49 @@ const App: React.FC = () => {
               </div>
               
               {/* Plugin List */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {plugins.map((plugin, index) => (
-                  <div key={index} className="plugin-row p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">{plugin.name || 'Unknown Plugin'}</h3>
-                        <p className="text-sm text-plugin-text-dim">
-                          {plugin.manufacturer || 'Unknown'} • {plugin.type || 'Unknown Type'}
-                        </p>
+                  <div key={index} className="bg-plugin-card border border-plugin-border p-4 rounded-lg hover:bg-plugin-hover transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="flex-shrink-0">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              plugin.type === 'VST3' ? 'bg-blue-900 text-blue-200' :
+                              plugin.type === 'AU' ? 'bg-green-900 text-green-200' :
+                              plugin.type === 'VST2' ? 'bg-purple-900 text-purple-200' :
+                              'bg-gray-900 text-gray-200'
+                            }`}>
+                              {plugin.type || 'Unknown'}
+                            </span>
+                          </div>
+                          <h3 className="font-semibold text-plugin-text">{plugin.name || 'Unknown Plugin'}</h3>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-plugin-text-dim mb-2">
+                          {plugin.manufacturer && (
+                            <span className="flex items-center gap-1">
+                              <span className="text-plugin-accent">🏢</span>
+                              {plugin.manufacturer}
+                            </span>
+                          )}
+                          {plugin.format && (
+                            <span className="flex items-center gap-1">
+                              <span className="text-plugin-accent">🎵</span>
+                              {plugin.format}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="text-xs text-plugin-text-dim font-mono bg-plugin-bg px-2 py-1 rounded truncate">
+                          {plugin.path}
+                        </div>
                       </div>
-                      <div className="text-xs text-plugin-text-dim">
-                        {plugin.path}
+                      
+                      <div className="flex-shrink-0 ml-4">
+                        <button className="text-plugin-text-dim hover:text-plugin-accent transition-colors">
+                          <span className="text-lg">⚙️</span>
+                        </button>
                       </div>
                     </div>
                   </div>
