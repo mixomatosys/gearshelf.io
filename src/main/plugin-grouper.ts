@@ -1,9 +1,11 @@
 import { Plugin } from './plugin-scanner';
 
+type PluginType = 'VST3' | 'VST2' | 'AU' | 'Unknown';
+
 export interface GroupedPlugin {
   name: string;
   manufacturer?: string;
-  types: Array<'VST3' | 'VST2' | 'AU'>;
+  types: Array<PluginType>;
   paths: { [key: string]: string }; // type -> path mapping
   formats: string[];
 }
