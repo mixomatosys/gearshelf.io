@@ -4,7 +4,11 @@ const webpack = require('webpack');
 
 module.exports = {
   entry: './src/renderer/index-debug.tsx',
-  target: 'electron-renderer',
+  target: 'web',
+  node: {
+    __dirname: false,
+    __filename: false,
+  },
   module: {
     rules: [
       {
@@ -30,6 +34,11 @@ module.exports = {
       '@/renderer': path.resolve(__dirname, 'src/renderer'),
       '@/shared': path.resolve(__dirname, 'src/shared'),
     },
+    fallback: {
+      "path": require.resolve("path-browserify"),
+      "fs": false,
+      "crypto": false,
+    },
   },
   output: {
     filename: 'renderer.js',
@@ -43,10 +52,14 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       'global': 'globalThis',
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+    new webpack.ProvidePlugin({
+      global: 'globalThis',
+      process: 'process/browser',
     }),
   ],
   externals: {
-    'sqlite3': 'commonjs sqlite3',
     'electron': 'commonjs electron',
   },
   devServer: {
